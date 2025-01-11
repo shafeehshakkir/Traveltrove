@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Travel Platform - Forum</title>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">TravelPlatform</div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="forum.html">Forum</a>
+            <a href="profile.html">Profile</a>
+            <a href="booking.html">Booking</a>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search forum...">
+            <button>Search</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Discussion Forum</h1>
+        <div class="forum-posts">
+            <div class="forum-card">
+                <h3>Best places to visit in summer?</h3>
+                <div class="post-actions">
+                    <button class="action-button" onclick="upvote(this)">Upvote</button>
+                    <button class="action-button" onclick="downvote(this)">Downvote</button>
+                    <button class="action-button" onclick="shareLink(this)">Share</button>
+                    <button class="action-button" onclick="replyToPost(this)">Reply</button>
+                </div>
+                <div class="reply-section" style="display:none;">
+                    <textarea placeholder="Type your reply here..."></textarea>
+                    <button onclick="submitReply(this)">Submit Reply</button>
+                </div>
+            </div>
+        </div>
+        <div class="post-new">
+            <h3>Post a New Topic</h3>
+            <textarea placeholder="Write your topic here..."></textarea>
+            <div>
+                <input type="file" accept="image/*">
+            </div>
+            <button onclick="postNewTopic()">Post</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
