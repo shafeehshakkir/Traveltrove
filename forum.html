@@ -4,11 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="forum.css">
     <title>Travel Platform - Forum</title>
 </head>
 
 <body>
+    <!-- Navbar -->
     <nav class="navbar">
         <div class="logo">TravelPlatform</div>
         <div class="nav-links">
@@ -23,34 +24,45 @@
         </div>
     </nav>
 
+    <!-- Main Container -->
     <div class="container">
         <h1>Discussion Forum</h1>
+
+        <!-- All Posts Section -->
         <div class="forum-posts">
-            <div class="forum-card">
-                <h3>Best places to visit in summer?</h3>
-                <div class="post-actions">
-                    <button class="action-button" onclick="upvote(this)">Upvote</button>
-                    <button class="action-button" onclick="downvote(this)">Downvote</button>
-                    <button class="action-button" onclick="shareLink(this)">Share</button>
-                    <button class="action-button" onclick="replyToPost(this)">Reply</button>
-                </div>
-                <div class="reply-section" style="display:none;">
-                    <textarea placeholder="Type your reply here..."></textarea>
-                    <button onclick="submitReply(this)">Submit Reply</button>
-                </div>
-            </div>
+            <!-- Forum posts will be dynamically inserted here -->
         </div>
-        <div class="post-new">
-            <h3>Post a New Topic</h3>
-            <textarea placeholder="Write your topic here..."></textarea>
-            <div>
-                <input type="file" accept="image/*">
-            </div>
-            <button onclick="postNewTopic()">Post</button>
+
+        <!-- Button to Open Create Post Popup -->
+        <button class="create-post-button" onclick="openPostPopup()">+ Create New Post</button>
+    </div>
+
+    <!-- Popup Form for Creating a New Post -->
+    <div class="post-popup" id="postPopup" style="display: none;">
+        <div class="popup-content">
+            <h3>Create a New Post</h3>
+            <form id="postForm" onsubmit="submitPost(event)">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" required>
+
+                <label for="content">Content:</label>
+                <textarea id="content" name="content" rows="4" required></textarea>
+
+                <label for="tags">Tags (comma-separated):</label>
+                <input type="text" id="tags" name="tags">
+
+                <label for="images">Upload Images:</label>
+                <input type="file" id="images" name="images" multiple accept="image/*">
+
+                <div class="popup-actions">
+                    <button type="submit">Submit</button>
+                    <button type="button" onclick="closePostPopup()">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="forum.js"></script>
 </body>
 
 </html>
