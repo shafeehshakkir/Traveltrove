@@ -24,12 +24,31 @@
         </div>
     </nav>
 
+    <!-- Filter and Sort Section -->
+    <div class="filter-sort-section">
+        <label for="categoryFilter">Select Category:</label>
+        <select id="categoryFilter" onchange="filterPosts()">
+            <option value="">All Categories</option>
+            <option value="hiking">Hiking</option>
+            <option value="swimming">Swimming</option>
+            <option value="riding">Riding</option>
+        </select>
+
+        <label for="sortOrder">Sort By:</label>
+        <select id="sortOrder" onchange="sortPosts()">
+            <option value="latest">Latest</option>
+            <option value="upvotes">Most Upvotes</option>
+        </select>
+    </div>
+
+    <hr>
+
     <!-- Main Container -->
     <div class="container">
         <h1>Discussion Forum</h1>
 
         <!-- All Posts Section -->
-        <div class="forum-posts">
+        <div class="forum-posts" id="forumPosts">
             <!-- Forum posts will be dynamically inserted here -->
         </div>
 
@@ -46,13 +65,16 @@
                 <input type="text" id="title" name="title" required>
 
                 <label for="content">Content:</label>
-                <textarea id="content" name="content" rows="4" required></textarea>
+                <textarea id="content" name="content" rows="6" required></textarea>
 
                 <label for="tags">Tags (comma-separated):</label>
                 <input type="text" id="tags" name="tags">
 
                 <label for="images">Upload Images:</label>
-                <input type="file" id="images" name="images" multiple accept="image/*">
+                <input type="file" id="images" name="images" accept="image/*" multiple>
+
+                <label for="videos">Upload Videos:</label>
+                <input type="file" id="videos" name="videos" accept="video/*" multiple>
 
                 <div class="popup-actions">
                     <button type="submit">Submit</button>

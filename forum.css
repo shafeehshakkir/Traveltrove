@@ -1,161 +1,251 @@
-/* General Page Styles */
+/* forum.css */
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f9f9f9;
-    color: #333;
 }
 
-/* Navbar */
 .navbar {
+    background-color: #333;
+    color: white;
+    padding: 40px; /* Increased padding for a larger header */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
+    font-size: 18px; /* Increased font size for navbar */
+}
+
+.logo {
+    font-size: 24px; /* Increased font size for logo */
 }
 
 .nav-links a {
     color: white;
     text-decoration: none;
-    margin: 0 10px;
-}
-
-.nav-links a:hover {
-    text-decoration: underline;
+    margin: 0 20px; /* Increased margin for better spacing */
+    font-size: 18px; /* Increased font size for nav links */
 }
 
 .search-bar input {
-    padding: 5px;
-    margin-right: 10px;
+    padding: 10px; /* Increased padding for search input */
+    font-size: 16px; /* Increased font size for search input */
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 .search-bar button {
-    padding: 5px 10px;
-    background-color: white;
-    color: #007bff;
-    border: 1px solid #007bff;
+    padding: 10px 15px; /* Increased padding for search button */
+    font-size: 16px; /* Increased font size for search button */
+    border: none;
+    border-radius: 4px;
+    background-color: #007BFF;
+    color: white;
     cursor: pointer;
+    margin-left: 5px; /* Spacing between input and button */
 }
 
 .search-bar button:hover {
-    background-color: #0056b3;
-    color: white;
+    background-color: #0056b3; /* Darker color on hover */
 }
 
-/* Container */
-.container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 10px;
-}
-
-/* Forum Posts */
-.forum-posts {
+.filter-sort-section {
+    margin: 20px 0;
     display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
+    align-items: center;
 }
 
-.forum-card {
-    background: white;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.filter-sort-section label {
+    margin-right: 10px;
 }
 
-.forum-card h3 {
-    margin-bottom: 10px;
-}
-
-.forum-card p {
-    margin-bottom: 5px;
+.filter-sort-section select {
+    margin-right: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
     font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.3s;
 }
 
-.tags {
-    font-size: 12px;
-    color: #555;
-    margin-bottom: 10px;
+.filter-sort-section select:hover {
+    border-color: #007BFF;
 }
 
-.post-image {
-    max-width: 100%;
-    height: auto;
-    margin: 5px 0;
+hr {
+    border: 1px solid #ccc;
+    margin: 20px 0;
+}
+
+.container {
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+}
+
+.forum-posts {
+    margin: 20px 0;
+}
+
+.post {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #fff;
     border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.post h2 {
+    font-size: 24px; /* Larger title font size */
+    color: #333; /* Darker title color */
+    margin: 0 0 10px; /* Spacing below title */
+}
+
+.post p {
+    font-size: 16px; /* Content font size */
+    line-height: 1.5; /* Better line spacing */
+    margin: 10px 0; /* Spacing above and below content */
+    background-color: #f9f9f9; /* Light background for content */
+    padding: 10px; /* Padding inside content area */
+    border-radius: 4px; /* Rounded corners for content area */
+}
+
+.post-media {
+    margin: 10px 0; /* Spacing above and below media */
+}
+
+.post-media img {
+    max-width: 100%; /* Responsive images */
+    border-radius: 4px; /* Rounded corners for images */
+    margin-bottom: 10px; /* Spacing below images */
+}
+
+.post-media video {
+    max-width: 100%; /* Responsive videos */
+    border-radius: 4px; /* Rounded corners for videos */
+    margin-bottom: 10px; /* Spacing below videos */
+}
+
+.post-actions {
+    margin-top: 10px;
 }
 
 .post-actions button {
-    background-color: #007bff;
-    color: white;
-    padding: 5px 10px;
+    margin-right: 10px;
+    padding: 10px 15px;
     border: none;
     border-radius: 4px;
+    background-color: #007BFF;
+    color: white;
     cursor: pointer;
-    margin-right: 5px;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 .post-actions button:hover {
     background-color: #0056b3;
+    transform: scale(1.05);
 }
 
-/* Create Post Button */
-.create-post-button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
+.reply-field {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.reply {
+    margin-top: 5px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-left: 3px solid #007BFF;
+    border-radius: 5px; /* Rounded corners for replies */
+}
+
+.reply-actions {
+    margin-top: 5px; /* Spacing above actions */
+}
+
+.reply-actions button {
+    padding: 5px 10px;
     border: none;
     border-radius: 4px;
+    background-color: #007BFF; /* Button color */
+    color: white;
     cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s; /* Add transition for hover */
 }
 
-/* Popup Styling */
+.reply-actions button:hover {
+    background-color: #0056b3; /* Darker color on hover */
+    transform: scale(1.05); /* Slight scale effect on hover */
+}
+
+.create-post-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.create-post-button:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
+
 .post-popup {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid #ccc;
+    background-color: white;
+    padding: 30px; /* Increased padding for more room */
     z-index: 1000;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    width: 600px; /* Increased width for better appearance */
 }
 
 .popup-content {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    max-width: 500px;
+    max-width: 100%; /* Allowing full width of the popup */
+}
+
+.popup-content label {
+    display: block;
+    margin-top: 10px;
+}
+
+.popup-content input,
+.popup-content textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 .popup-actions {
-    margin-top: 15px;
-    display: flex;
-    justify-content: space-between;
+    margin-top: 20px;
 }
 
 .popup-actions button {
-    padding: 8px 16px;
+    margin-right: 10px;
+    padding: 10px 15px;
     border: none;
     border-radius: 4px;
-    cursor: pointer;
-}
-
-.popup-actions button:first-child {
-    background-color: #007bff;
+    background-color: #007BFF;
     color: white;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
-.popup-actions button:last-child {
-    background-color: #ddd;
-    color: black;
+.popup-actions button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
 }
