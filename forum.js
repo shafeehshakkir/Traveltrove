@@ -1,160 +1,201 @@
-// URL of your backend API
-const API_URL = 'http://localhost:3000/posts'; // Replace with your actual API URL
+// forum.js
 
-// Function to fetch posts from the database
-async function fetchPosts() {
-    try {
-        const response = await fetch(API_URL);
-        if (!response.ok) {
-            throw new Error('Failed to fetch posts');
-        }
-        const posts = await response.json();
-        renderPosts(posts);
-    } catch (error) {
-        console.error('Error fetching posts:', error);
-    }
+let postIdCounter = 0;
+const posts = [];
+
+// Function to open the post creation popup
+function openPostPopup() {
+    document.getElementById('postPopup').style.display = 'block';
+}
+
+// Function to close the post creation popup
+function closePostPopup() {
+    document.getElementById('postPopup').style.display = 'none';
+}
+
+// Function to submit the post
+function submitPost(event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    const title = document.getElementById('title').value;
+    const content = document.getElementById('content').value;
+    const tags = document.getElementById('tags').value.split(',').map(tag => tag.trim());
+    const images = document.getElementById('images').files;
+    const videos = document.getElementById('videos').files;
+
+    // Create a new post object
+    const post = {
+        id: postIdCounter++,
+        title: title,
+        content: content,
+        tags: tags,
+        upvotes: 0,
+        downvotes: 0,
+        images: Array.from(images).map(file => URL.createObjectURL(file)),
+        videos: Array.from(videos).map(file => URL.createObjectURL(file)),
+        replies: [] // Initialize replies array
+    };
+
+    posts.push(post);
+    renderPosts(); // Render posts after adding a new one
+
+    // Reset the form
+    document.getElementById('postForm').reset();
+    closePostPopup();
 }
 
 // Function to render posts
-function renderPosts(posts) {
+function renderPosts() {
     const forumPostsContainer = document.getElementById('forumPosts');
-    forumPostsContainer.innerHTML = '';
+    forumPostsContainer.innerHTML = ''; // Clear previous posts
 
     posts.forEach(post => {
-        const postTemplate = document.getElementById('postTemplate').content.cloneNode(true);
+        const postElement = document.createElement('div');
+        postElement.className = 'post';
+        postElement.setAttribute('data-post-id', post.id);
 
-        postTemplate.querySelector('.post').setAttribute('data-post-id', post.id);
-        postTemplate.querySelector('.post-title').textContent = post.title;
-        postTemplate.querySelector('.post-content').textContent = post.content;
-        postTemplate.querySelector('.post-tags').textContent = post.tags.join(', ');
+        // Create HTML for images
+        const imagesHtml = post.images.map(img => `<img src="${img}" alt="Post Image" class="post-image">`).join('');
 
-        const postMedia = postTemplate.querySelector('.post-media');
-        post.images.forEach(img => {
-            const imgElement = document.createElement('img');
-            imgElement.src = img;
-            imgElement.className = 'post-image';
-            postMedia.appendChild(imgElement);
-        });
-        post.videos.forEach(video => {
-            const videoElement = document.createElement('video');
-            videoElement.controls = true;
-            videoElement.innerHTML = `<source src="${video}" type="video/mp4">Your browser does not support the video tag.`;
-            videoElement.className = 'post-video';
-            postMedia.appendChild(videoElement);
-        });
+        // Create HTML for videos
+        const videosHtml = post.videos.map(video => `<video controls class="post-video"><source src="${video}" type="video/mp4">Your browser does not support the video tag.</video>`).join('');
 
-        // Render replies
-        const repliesContainer = postTemplate.querySelector('.replies');
-        post.replies.forEach(reply => {
-            const replyElement = document.createElement('div');
-            replyElement.className = 'reply';
-            replyElement.innerHTML = `
-                <p>${reply.content}</p>
-                <small>Replied on: ${reply.timestamp}</small>
-            `;
-            repliesContainer.appendChild(replyElement);
-        });
+        postElement.innerHTML = `
+            <h2>${post.title}</h2>
+            <p>${post.content}</p>
+            <p><strong>Tags:</strong> ${post.tags.join(', ')}</p>
+            <div class="post-media">
+                ${imagesHtml}
+                ${videosHtml}
+            </div>
+            <div class="post-actions">
+                <button onclick="upvotePost(${post.id})">Upvote (<span class="upvote-count" id="upvote-${post.id}">${post.upvotes}</span>)</button>
+                <button onclick="downvotePost(${post.id})">Downvote (<span class="downvote-count" id="downvote-${post.id}">${post.downvotes}</span>)</button>
+                <button onclick="sharePost()">Share</button>
+                <button onclick="toggleReplyField(${post.id})">Reply</button>
+            </div>
+            <div class="reply-field" id="reply-field-${post.id}" style="display: none;">
+                <textarea placeholder="Write your reply..."></textarea>
+                <button onclick="submitReply(${post.id})">Submit Reply</button>
+            </div>
+            <div class="replies" id="replies-${post.id}"></div>
+        `;
 
-        // Attach event listeners
-        postTemplate.querySelector('.upvote-btn').addEventListener('click', () => upvotePost(post.id));
-        postTemplate.querySelector('.downvote-btn').addEventListener('click', () => downvotePost(post.id));
-        postTemplate.querySelector('.share-btn').addEventListener('click', () => sharePost(post.id));
-        postTemplate.querySelector('.reply-btn').addEventListener('click', () => toggleReplyField(post.id));
-
-        forumPostsContainer.appendChild(postTemplate);
+        forumPostsContainer.appendChild(postElement);
     });
 }
 
-// Function to toggle the reply field
-function toggleReplyField(postId) {
-    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
-    const replyField = postElement.querySelector('.reply-field');
-    replyField.style.display = replyField.style.display === 'none' ? 'block' : 'none';
-
-    // Add event listener for the "Submit Reply" button
-    const submitReplyBtn = postElement.querySelector('.submit-reply-btn');
-    submitReplyBtn.onclick = () => submitReply(postId, replyField);
+// Filtering posts based on selected category
+function filterPosts() {
+    const selectedCategory = document.getElementById('categoryFilter').value;
+    const filteredPosts = selectedCategory ? posts.filter(post => post.tags.includes(selectedCategory)) : posts;
+    renderFilteredPosts(filteredPosts);
 }
 
-// Function to handle reply submission
-async function submitReply(postId, replyField) {
-    const textarea = replyField.querySelector('textarea');
-    const replyContent = textarea.value.trim();
+// Sorting posts based on selected order
+function sortPosts() {
+    const sortOrder = document.getElementById('sortOrder').value;
+    const sortedPosts = [...posts];
 
-    if (!replyContent) {
-        alert('Reply cannot be empty!');
-        return;
+    if (sortOrder === 'latest') {
+        sortedPosts.sort((a, b) => b.id - a.id); // Sort by latest
+    } else if (sortOrder === 'upvotes') {
+        sortedPosts.sort((a, b) => b.upvotes - a.upvotes); // Sort by upvotes
     }
 
-    try {
-        // Send the reply to the server
-        const response = await fetch(`${API_URL}/${postId}/replies`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                content: replyContent,
-                timestamp: new Date().toISOString(),
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to submit reply');
-        }
-
-        // Clear the reply field and hide it
-        textarea.value = '';
-        replyField.style.display = 'none';
-
-        // Fetch and re-render posts
-        fetchPosts();
-    } catch (error) {
-        console.error('Error submitting reply:', error);
-    }
+    renderFilteredPosts(sortedPosts);
 }
 
-// Placeholder for upvote functionality
+// Render filtered posts
+function renderFilteredPosts(filteredPosts) {
+    const forumPostsContainer = document.getElementById('forumPosts');
+    forumPostsContainer.innerHTML = ''; // Clear previous posts
+
+    filteredPosts.forEach(post => {
+        const postElement = document.createElement('div');
+        postElement.className = 'post';
+        postElement.setAttribute('data-post-id', post.id);
+
+        // Create HTML for images
+        const imagesHtml = post.images.map(img => `<img src="${img}" alt="Post Image" class="post-image">`).join('');
+
+        // Create HTML for videos
+        const videosHtml = post.videos.map(video => `<video controls class="post-video"><source src="${video}" type="video/mp4">Your browser does not support the video tag.</video>`).join('');
+
+        postElement.innerHTML = `
+            <h2>${post.title}</h2>
+            <p>${post.content}</p>
+            <p><strong>Tags:</strong> ${post.tags.join(', ')}</p>
+            <div class="post-media">
+                ${imagesHtml}
+                ${videosHtml}
+            </div>
+            <div class="post-actions">
+                <button onclick="upvotePost(${post.id})">Upvote (<span class="upvote-count" id="upvote-${post.id}">${post.upvotes}</span>)</button>
+                <button onclick="downvotePost(${post.id})">Downvote (<span class="downvote-count" id="downvote-${post.id}">${post.downvotes}</span>)</button>
+                <button onclick="sharePost()">Share</button>
+                <button onclick="toggleReplyField(${post.id})">Reply</button>
+            </div>
+            <div class="reply-field" id="reply-field-${post.id}" style="display: none;">
+                <textarea placeholder="Write your reply..."></textarea>
+                <button onclick="submitReply(${post.id})">Submit Reply</button>
+            </div>
+            <div class="replies" id="replies-${post.id}"></div>
+        `;
+
+        forumPostsContainer.appendChild(postElement);
+    });
+}
+
 function upvotePost(postId) {
-    alert(`Upvoted post ${postId}`);
+    const post = posts.find(p => p.id === postId);
+    post.upvotes++;
+    document.getElementById(`upvote-${postId}`).innerText = post.upvotes;
 }
 
-// Placeholder for downvote functionality
 function downvotePost(postId) {
-    alert(`Downvoted post ${postId}`);
+    const post = posts.find(p => p.id === postId);
+    post.downvotes++;
+    document.getElementById(`downvote-${postId}`).innerText = post.downvotes;
 }
 
-// Placeholder for share functionality
-function sharePost(postId) {
-    alert(`Shared post ${postId}`);
+function sharePost() {
+    alert("Post shared!");
 }
 
-// Add new post (saving to the database)
-async function addPost(title, content, tags, images = [], videos = []) {
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title,
-                content,
-                tags,
-                images,
-                videos,
-                replies: [],
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to add new post');
-        }
-
-        // Fetch and re-render posts
-        fetchPosts();
-    } catch (error) {
-        console.error('Error adding new post:', error);
-    }
+function toggleReplyField(postId) {
+    const replyField = document.getElementById(`reply-field-${postId}`);
+    replyField.style.display = replyField.style.display === 'none' ? 'block' : 'none';
 }
 
-// Render the posts on page load
-document.addEventListener('DOMContentLoaded', () => {
-    fetchPosts();
-});
+function submitReply(postId) {
+    const replyTextArea = document.querySelector(`#reply-field-${postId} textarea`);
+    const replyContent = replyTextArea.value;
+
+    const repliesContainer = document.getElementById(`replies-${postId}`);
+    const replyElement = document.createElement('div');
+    replyElement.className = 'reply';
+
+    // Initialize upvotes and downvotes for replies
+    replyElement.innerHTML = `
+        <p>${replyContent}</p>
+        <div class="reply-actions">
+            <button onclick="upvoteReply(this)">Upvote (<span class="reply-upvote-count">0</span>)</button>
+            <button onclick="downvoteReply(this)">Downvote (<span class="reply-downvote-count">0</span>)</button>
+        </div>
+    `;
+
+    repliesContainer.appendChild(replyElement);
+    replyTextArea.value = ''; // Clear the textarea
+}
+
+// Functions to handle reply upvotes and downvotes
+function upvoteReply(button) {
+    const upvoteCountSpan = button.querySelector('.reply-upvote-count');
+    upvoteCountSpan.innerText = parseInt(upvoteCountSpan.innerText) + 1;
+}
+
+function downvoteReply(button) {
+    const downvoteCountSpan = button.querySelector('.reply-downvote-count');
+    downvoteCountSpan.innerText = parseInt(downvoteCountSpan.innerText) + 1;
+}
