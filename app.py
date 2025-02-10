@@ -1,93 +1,150 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, render_template, jsonify, Response
 from flask_cors import CORS
 from pymongo import MongoClient
 from gridfs import GridFS
-import datetime
 from bson.objectid import ObjectId
 from io import BytesIO
-
 # Flask app setup
 app = Flask(__name__)
-CORS(app)
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
+CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:5500"}})
 
-# MongoDB setup
-client = MongoClient('mongodb+srv://nightanon038:dah9NfhKw71cA9ix@test-cluster.l9zqd.mongodb.net/?retryWrites=true&w=majority&appName=test-cluster')  # Replace with your MongoDB URI
+
+
+
+# MongoDB and gridfs setup
+client = MongoClient('mongodb+srv://nightanon038:wV86jTZpkYJ1K6Qo@travel-trove.sdb1i.mongodb.net/?retryWrites=true&w=majority&appName=travel-trove')  # Replace with your MongoDB URI
+serverSelectionTimeoutMS=50000,
 db = client['travel_platform']  # Database name
-posts_collection = db['posts']
-fs = GridFS(db)  # GridFS for storing images
+collection = db['posts']
+fs = GridFS(db)  # GridFS for storing files
 
-# Routes
 
-# Create a new post
-@app.route('/posts', methods=['POST'])
-def create_post():
-    title = request.form.get('title')
-    content = request.form.get('content')
-    tags = request.form.get('tags', '').split(',')
-    images = request.files.getlist('images')
 
-    image_ids = []
-    for image in images:
-        # Store image in GridFS and get its ID
-        image_id = fs.put(image, filename=image.filename)
-        image_ids.append(str(image_id))
 
-    post = {
-        "title": title,
-        "content": content,
-        "tags": tags,
-        "images": image_ids,
-        "created_at": datetime.datetime.utcnow(),
-        "comments": []
-    }
-    posts_collection.insert_one(post)
-    return jsonify({'message': 'Post created successfully'}), 201
+@app.route('/')
+def home():
+    return render_template('forum.html')  # Render your HTML template
 
-# Get all posts
+
 @app.route('/posts', methods=['GET'])
-def get_posts():
-    posts = []
-    for post in posts_collection.find():
-        post['_id'] = str(post['_id'])  # Convert ObjectId to string
-        post['images'] = [str(image_id) for image_id in post['images']]  # Convert image ObjectIds to strings
-        posts.append(post)
-    return jsonify(posts), 200
-
-# Retrieve an image by its ID
-@app.route('/images/<image_id>', methods=['GET'])
-def get_image(image_id):
+def get_all_posts():
     try:
-        image_file = fs.get(ObjectId(image_id))
-        return send_file(BytesIO(image_file.read()), mimetype=image_file.content_type, as_attachment=False,
-                         download_name=image_file.filename)
+        posts = list(collection.find({}))
+        for post in posts:
+            # Convert ObjectId to string for JSON
+            post["_id"] = str(post["_id"])
+            if post.get("image_id"):
+                post["image_url"] = f"http://localhost:5000/file/{
+                    post['image_id']}"
+            if post.get("video_id"):
+                post["video_url"] = f"http://localhost:5000/file/{
+                    post['video_id']}"
+        return jsonify(posts), 200
     except Exception as e:
-        return jsonify({'message': 'Image not found'}), 404
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-# Add a comment to a post
-@app.route('/posts/<post_id>/comments', methods=['POST'])
-def add_comment(post_id):
-    comment_content = request.json.get('content')
-    comment = {
-        "content": comment_content,
-        "created_at": datetime.datetime.utcnow()
-    }
-    posts_collection.update_one({'_id': ObjectId(post_id)}, {'$push': {'comments': comment}})
-    return jsonify({'message': 'Comment added successfully'}), 201
 
-# Get a single post with comments
-@app.route('/posts/<post_id>', methods=['GET'])
-def get_post(post_id):
-    post = posts_collection.find_one({'_id': ObjectId(post_id)})
-    if not post:
-        return jsonify({'message': 'Post not found'}), 404
-    post['_id'] = str(post['_id'])  # Convert ObjectId to string
-    post['images'] = [str(image_id) for image_id in post['images']]  # Convert image ObjectIds to strings
-    return jsonify(post), 200
 
-# Run the app
+@app.route('/add_post', methods=['POST'])
+def add_post():
+    try:
+        # Get form data
+        title = request.form.get('title')
+        content = request.form.get('content')
+        tags = request.form.get('tags', "").split(",")  # Split tags
+        upvote_post = request.form.get('upvote_post')
+        downvote_post = request.form.get('downvote_post')
+        
+
+        # Handle file uploads
+        image_file = request.files.get('images')
+        video_file = request.files.get('videos')
+
+        image_id = None
+        video_id = None
+
+        if image_file:
+            image_id = fs.put(image_file, filename=image_file.filename,
+                              content_type=image_file.content_type)
+        if video_file:
+            video_id = fs.put(video_file, filename=video_file.filename,
+                              content_type=video_file.content_type)
+
+        # Insert post into MongoDB
+        post = {
+            "_id": ObjectId(),
+            "title": title,
+            "content": content,
+            "tags": tags,
+            "image_id": str(image_id) if image_id else None,
+            "video_id": str(video_id) if video_id else None,
+            "upvotes": 0,   # Default upvotes to 0
+            "downvotes": 0, # Default downvotes to 0
+            "replies":[]
+            
+            
+        }
+        collection.insert_one(post)
+
+        return jsonify({"message": "Post added successfully!"}), 201
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/file/<file_id>', methods=['GET'])
+def get_file(file_id):
+    try:
+        # Retrieve file from GridFS
+        file = fs.get(ObjectId(file_id))
+        response = app.response_class(
+            file.read(), content_type=file.content_type)
+        response.headers["Content-Disposition"] = f"inline; filename={
+            file.filename}"
+        return response
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 404
+
+@app.route('/file/<file_id>', methods=['DELETE'])
+def delete_file(file_id):
+    try:
+        # Delete file from GridFS
+        fs.delete(ObjectId(file_id))
+        return jsonify({"message": "File deleted successfully!"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 404
+@app.route('/posts/<post_id>/upvote', methods=['POST'])
+def upvote_post(post_id):
+    try:
+        collection.update_one({"_id": ObjectId(post_id)}, {"$inc": {"upvotes": 1}})
+        return jsonify({"message": "Upvoted successfully!"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/posts/<post_id>/downvote', methods=['POST'])
+def downvote_post(post_id):
+    try:
+        collection.update_one({"_id": ObjectId(post_id)}, {"$inc": {"downvotes": 1}})
+        return jsonify({"message": "Downvoted successfully!"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/posts/reply/<post_id>', methods=['POST'])
+def reply_post(post_id):
+    try:
+        # Use request.get_json() to parse JSON body
+        data = request.get_json()
+        content = data.get('content', '').strip()  # Get content and strip whitespace
+
+        if not content:
+            return jsonify({"status": "error", "message": "Reply content cannot be empty"}), 400
+        
+        reply = {"content": content}
+        collection.update_one({"_id": ObjectId(post_id)}, {"$push": {"replies": reply}})
+        return jsonify({"message": "Reply added successfully!"}), 201
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
-
-
-
-
+    app.run(port=5000,debug=True)

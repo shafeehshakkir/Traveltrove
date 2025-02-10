@@ -1,49 +1,39 @@
-// script.js
-
-// Function to fetch posts from the database
 async function fetchPosts() {
-    const sortOption = document.getElementById('sortOptions').value;
-    const filterOption = document.getElementById('filterOptions').value;
-
-    // Construct the API endpoint with query parameters for sorting and filtering
-    const apiUrl = `/api/posts?sort=${sortOption}&filter=${filterOption}`;
-
     try {
-        const response = await fetch(apiUrl);
+        const response = await fetch('http://127.0.0.1:5001/posts');
         const data = await response.json();
+        
+        console.log("Fetched data:", data); // Log the data to inspect it
 
-        // Clear previous posts
-        document.getElementById('recommendedLocations').innerHTML = '';
-        document.getElementById('trendingLocations').innerHTML = '';
-
-        // Populate Recommended Locations
-        data.recommended.forEach(post => {
-            const card = createCard(post);
-            document.getElementById('recommendedLocations').appendChild(card);
-        });
-
-        // Populate Trending Locations
-        data.trending.forEach(post => {
-            const card = createCard(post);
-            document.getElementById('trendingLocations').appendChild(card);
-        });
+        if (!data.trendingPosts || !data.recommendedPosts) {
+            console.error("Error: Missing data fields", data);  // Log if fields are missing
+            return;
+        }
+        
+        
+        
+        displayPosts(data.trendingPosts, 'trendingPosts');
+        displayPosts(data.recommendedPosts, 'recommendedPosts');
+        
     } catch (error) {
-        console.error('Error fetching posts:', error);
+        console.error("Error fetching posts:", error);
     }
 }
 
-// Function to create a card for a post
-function createCard(post) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.onclick = () => location.href = `post.html?id=${post.id}`;
-    card.innerHTML = `
-        <img src="${post.image}" alt="${post.title}">
-        <h3>${post.title}</h3>
-        <p>${post.description}</p>
-    `;
-    return card;
+function displayPosts(posts, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = ''; // Clear existing content before adding new posts
+    posts.forEach(post => {
+        const postDiv = document.createElement('div');
+        postDiv.className = 'post-card';
+        postDiv.innerHTML = `
+            <img src="${post.image_url}" alt="Post Image">
+            <h2>${post.title}</h2>
+            <p>Upvotes: ${post.upvotes}</p>
+        `;
+        container.appendChild(postDiv);
+    });
 }
 
 // Fetch posts on page load
-window.onload = fetchPosts;
+document.addEventListener('DOMContentLoaded', fetchPosts);
